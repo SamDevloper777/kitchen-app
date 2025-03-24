@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Phone, Headphones } from "lucide-react-native"; // Using Lucide Icons
 import { SafeAreaView } from "react-native-safe-area-context";
-import OrderCard from "../components/OrderCard";
+import OrderCard from "../../components/OrderCard";
 
 export default function HomeScreen() {
   const [isOnline, setIsOnline] = useState(true);
@@ -44,7 +44,7 @@ export default function HomeScreen() {
     },
   ];
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-gray-100">
       {/* Header with Logo and Switch */}
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-xl p-4">logo</Text>
