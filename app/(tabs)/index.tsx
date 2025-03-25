@@ -13,7 +13,6 @@ import OrderCard from "../../components/OrderCard";
 
 export default function HomeScreen() {
   const [isOnline, setIsOnline] = useState(true);
-
   const orders = [
     {
       id: "ORD-2893",
