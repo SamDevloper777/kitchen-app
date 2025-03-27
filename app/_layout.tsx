@@ -1,10 +1,13 @@
 import { Stack } from "expo-router";
 import "./global.css";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { Provider } from "react-redux";
+import store from "@/utlis/store";
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
+    <Provider store={store}>
+       <SafeAreaProvider>
       <SafeAreaView className="flex-1">
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -13,5 +16,7 @@ export default function RootLayout() {
         </Stack>
       </SafeAreaView>
     </SafeAreaProvider>
+    </Provider>
+   
   );
 }
