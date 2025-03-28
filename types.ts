@@ -1,18 +1,26 @@
-// redux/types.ts
+// types.ts
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export interface User {
-    id: string;
-    email: string;
-    token: string;
-  }
-  
-  export interface AuthState {
-    user: User | null;
-    loading: boolean;
-    error: string | null;
-  }
-  
-  export interface RegisterPayload {
-    email: string;
-    password: string;
-  }
-  
+  id: string;
+  name: string;
+  email: string;
+  token?: string;
+}
+export interface OtpVerifyPayload {
+  email: string;
+  otp: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  loading: boolean;
+  token: string | null;
+  isAuthenticated: boolean;
+  isRegistered: boolean;
+  error: string | null;
+}

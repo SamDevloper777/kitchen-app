@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 import "./global.css";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
-import store from "@/utlis/store";
+import store from "@/redux/store";
 
 export default function RootLayout() {
   return (
