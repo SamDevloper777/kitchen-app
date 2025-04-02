@@ -55,7 +55,7 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       <Text className="text-gray-500 my-4">or continue with</Text>
-
+{/* 
       <View className="flex-row space-x-4">
         <TouchableOpacity className="p-3 bg-white rounded-full border border-gray-300">
           <Image
@@ -75,10 +75,13 @@ export default function LoginScreen() {
             className="w-6 h-6"
           />
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <Pressable onPress={() => router.replace("/(auth)/register")}>
         <Text className="mt-6">Not a member? <Text className="text-blue-500">Register now</Text></Text>
+      </Pressable>
+      <Pressable onPress={() => router.replace("/(tabs)")}>
+        <Text className="mt-6">skip</Text>
       </Pressable>
     </View>
   );

@@ -4,39 +4,38 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
-  Pressable,
   ActivityIndicator,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser, clearError } from "../../redux/slices/authSlice";
+import { register, clearError } from "../../redux/slices/authSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 
 export default function Register() {
-  const [email, setEmail] = useState<string>("");
-  const [name, setName] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({ email: "", name: "", password: "" });
 
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, error, isRegistered } = useSelector(
+  const { loading, error, registeredEmail } = useSelector(
     (state: RootState) => state.auth
   );
 
   useEffect(() => {
-    // Clear any existing errors when component mounts
     dispatch(clearError());
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
-    if (isRegistered) {
-      // Navigate to OTP verification screen
-      router.push("/(auth)/otpVerify");
+    if (registeredEmail) {
+      router.push({
+        pathname: "/(auth)/otpVerify",
+        params: { email: registeredEmail },
+      });
     }
-  }, [isRegistered]);
+  }, [registeredEmail]);
 
   const validate = () => {
     let valid = true;
@@ -69,12 +68,7 @@ export default function Register() {
 
   const handleRegister = async () => {
     if (validate()) {
-      try {
-        await dispatch(registerUser({ name, email, password }));
-      } catch (err) {
-        // API error will be handled by the redux state
-        console.error("Registration failed:", err);
-      }
+      dispatch(register({ name, email, password }));
     }
   };
 
@@ -89,34 +83,29 @@ export default function Register() {
         <Text className="text-red-500 text-sm text-center mt-2">{error}</Text>
       )}
 
-      {/* Name */}
       <TextInput
         className="w-full p-4 mt-6 bg-white rounded-xl border border-gray-300"
         placeholder="Enter name"
         value={name}
         onChangeText={setName}
+        autoCapitalize="words"
       />
-      {errors.name ? (
-        <Text className="text-red-500 text-sm self-start mt-1">
-          {errors.name}
-        </Text>
-      ) : null}
+      {errors.name && (
+        <Text className="text-red-500 text-sm mt-1">{errors.name}</Text>
+      )}
 
-      {/* Email */}
       <TextInput
         className="w-full p-4 mt-4 bg-white rounded-xl border border-gray-300"
         placeholder="Enter email"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
-      {errors.email ? (
-        <Text className="text-red-500 text-sm self-start mt-1">
-          {errors.email}
-        </Text>
-      ) : null}
+      {errors.email && (
+        <Text className="text-red-500 text-sm mt-1">{errors.email}</Text>
+      )}
 
-      {/* Password */}
       <View className="w-full flex-row items-center bg-white rounded-xl border border-gray-300 mt-4 px-4 py-3">
         <TextInput
           className="flex-1"
@@ -124,6 +113,7 @@ export default function Register() {
           secureTextEntry={!showPassword}
           value={password}
           onChangeText={setPassword}
+          autoCapitalize="none"
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
           <FontAwesome
@@ -133,15 +123,9 @@ export default function Register() {
           />
         </TouchableOpacity>
       </View>
-      {errors.password ? (
-        <Text className="text-red-500 text-sm self-start mt-1">
-          {errors.password}
-        </Text>
-      ) : null}
-
-      <TouchableOpacity className="w-full mt-2">
-        <Text className="text-right text-blue-500">Recovery Password</Text>
-      </TouchableOpacity>
+      {errors.password && (
+        <Text className="text-red-500 text-sm mt-1">{errors.password}</Text>
+      )}
 
       <TouchableOpacity
         className="w-full bg-orange-500 p-4 rounded-xl mt-6"
@@ -155,35 +139,15 @@ export default function Register() {
         )}
       </TouchableOpacity>
 
-      <Text className="text-gray-500 my-4 text-center">or continue with</Text>
-
-      <View className="flex-row justify-center space-x-4">
-        <TouchableOpacity className="p-3 bg-white rounded-full border border-gray-300">
-          <Image
-            source={require("../../assets/google.png")}
-            className="w-6 h-6"
-          />
-        </TouchableOpacity>
-        <TouchableOpacity className="p-3 bg-white rounded-full border border-gray-300">
-          <Image
-            source={require("../../assets/apple.png")}
-            className="w-6 h-6"
-          />
-        </TouchableOpacity>
-        <TouchableOpacity className="p-3 bg-white rounded-full border border-gray-300">
-          <Image
-            source={require("../../assets/facebook.png")}
-            className="w-6 h-6"
-          />
-        </TouchableOpacity>
-      </View>
-
-      <Pressable onPress={() => router.replace("/(auth)")} className="mt-6">
+      <TouchableOpacity
+        onPress={() => router.replace("/(auth)")}
+        className="mt-6"
+      >
         <Text className="text-center">
-          Already have an Account?
-          <Text className="text-blue-500"> Login now</Text>
+          Already have an Account?{" "}
+          <Text className="text-blue-500">Login now</Text>
         </Text>
-      </Pressable>
+      </TouchableOpacity>
     </View>
   );
 }

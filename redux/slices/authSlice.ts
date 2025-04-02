@@ -1,94 +1,107 @@
-// authSlice.ts
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { AuthState, RegisterPayload, OtpVerifyPayload, User } from '../../types';
-import { endpoints } from '@/config/urls';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { registerUser, verifyEmail } from "../services/authService";
 
-export const registerUser = createAsyncThunk(
-  'auth/registerUser',
-  async (userData: RegisterPayload, { rejectWithValue }) => {
+// Define interfaces for the payload types
+interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+}
+
+interface VerifyOtpPayload {
+  email: string;
+  otp: string;
+}
+
+interface AuthState {
+  email: string | null;
+  registeredEmail: string | null;
+  loading: boolean;
+  error: string | null;
+  success: boolean;
+  isVerified: boolean;
+}
+
+const initialState: AuthState = {
+  email: null,
+  registeredEmail: null,
+  loading: false,
+  error: null,
+  success: false,
+  isVerified: false,
+};
+
+// Register thunk with proper typing
+export const register = createAsyncThunk<string, RegisterPayload, { rejectValue: string }>(
+  "auth/register",
+  async ({ name, email, password }, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post("http://127.0.0.1:8000/api/user/register/owner/", userData);
-      if (data.error) {
-        return rejectWithValue(data.error);
-      }
-      return data;
+      const data = await registerUser(name, email, password);
+      return email;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || 
-        error.response?.data?.error || 
-        'Registration failed. Please try again.'
+        error.response?.data?.message || "Registration failed"
       );
     }
   }
 );
 
-export const verifyOtp = createAsyncThunk(
-  'auth/verifyOtp',
-  async (payload: OtpVerifyPayload, { rejectWithValue }) => {
+export const verifyOtp = createAsyncThunk<any, VerifyOtpPayload, { rejectValue: string }>(
+  "auth/verifyOtp",
+  async ({ email, otp }, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post(endpoints.VERIFY_OTP, payload);
+      const data = await verifyEmail(email, otp);
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'OTP Verification failed');
+      return rejectWithValue(error.response?.data?.message || "OTP verification failed");
     }
   }
 );
 
-const initialState: AuthState = {
-  user: null,
-  loading: false,
-  token: null,
-  isAuthenticated: false,
-  isRegistered: false,
-  error: null,
-};
-
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
-    logout(state) {
-      state.isAuthenticated = false;
-      state.user = null;
-      state.token = null;
+    clearError: (state) => {
       state.error = null;
-      state.isRegistered = false;
     },
-    clearError(state) {
-      state.error = null;
+    resetSuccess: (state) => { 
+      state.success = false;
+      state.isVerified = false;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(registerUser.pending, (state) => {
+      // Register cases
+      .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state) => {
+      .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
-        state.isRegistered = true;
+        state.registeredEmail = action.payload;
+        state.success = true;
       })
-      .addCase(registerUser.rejected, (state, action) => {
+      .addCase(register.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Registration failed";
       })
+      // Verify OTP cases
       .addCase(verifyOtp.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(verifyOtp.fulfilled, (state, action) => {
+      .addCase(verifyOtp.fulfilled, (state) => {
         state.loading = false;
-        state.user = action.payload as User;
-        state.token = (action.payload as User).token || null;
-        state.isAuthenticated = true;
+        state.success = true;
+        state.registeredEmail = null;
       })
       .addCase(verifyOtp.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "OTP verification failed";
       });
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { clearError, resetSuccess } = authSlice.actions;
 export default authSlice.reducer;

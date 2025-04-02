@@ -3,7 +3,7 @@
 export const endpoints = {
   REGISTER: `${APP_BASE_URL}/user/register/owner/`,
   LOGIN: `${APP_BASE_URL}/login`,
-  VERIFY_OTP: `${APP_BASE_URL}/verify-otp`,
+  VERIFY_OTP: `${APP_BASE_URL}/user/verifyemail/`,
   
 };
 
