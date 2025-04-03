@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,11 @@ import {
   Image,
   Switch,
   ScrollView,
+  Platform,
+  Alert,
+  PermissionsAndroid,
 } from "react-native";
-import { launchImageLibrary } from "react-native-image-picker";
+import { launchImageLibrary, ImagePickerResponse } from "react-native-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function AddMenuItemForm() {
@@ -17,25 +20,70 @@ export default function AddMenuItemForm() {
   const [prepTime, setPrepTime] = useState("");
   const [category, setCategory] = useState("Appetizers");
   const [description, setDescription] = useState("");
-  const [imageUri, setImageUri] = useState(null);
+  const [imageUri, setImageUri] = useState<string | null>(null);
   const [isAvailable, setIsAvailable] = useState(true);
   const [quantityOptions, setQuantityOptions] = useState([{ qty: "", price: "" }]);
 
-  // Handle Image Selection
-  const selectImage = () => {
-    launchImageLibrary({ mediaType: "photo" }, (response) => {
-      if (response.assets && response.assets.length > 0 && !response.didCancel) {
-        setImageUri(response.assets[0].uri);
+  // Request permissions on Android
+  const requestCameraPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+          {
+            title: "Photo Library Access Permission",
+            message: "We need access to your photo library to upload menu item images.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK"
+          }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          return true;
+        } else {
+          Alert.alert("Permission Denied", "You need to grant photo library permission to upload images.");
+          return false;
+        }
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true; // iOS handles permissions through info.plist
+  };
+
+  const selectImage = async () => {
+    // Check and request permission first
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return;
+
+    const options = {
+      mediaType: "photo" as const,
+      quality: 1,
+      maxWidth: 500,
+      maxHeight: 500,
+      includeBase64: false,
+    };
+
+    launchImageLibrary(options, (response: ImagePickerResponse) => {
+      if (response.didCancel) {
+        console.log("User cancelled image picker");
+      } else if (response.errorCode) {
+        console.log("ImagePicker Error: ", response.errorCode, response.errorMessage);
+        Alert.alert("Error", "Failed to pick image: " + response.errorMessage);
+      } else if (response.assets && response.assets.length > 0) {
+        const uri = response.assets[0].uri;
+        if (uri) {
+          setImageUri(uri);
+        }
       }
     });
   };
 
-  // Handle Adding More Quantity Options
   const addQuantityOption = () => {
     setQuantityOptions([...quantityOptions, { qty: "", price: "" }]);
   };
 
-  // Handle Form Submission (placeholder)
   const handleSubmit = () => {
     console.log({
       itemName,
@@ -47,20 +95,16 @@ export default function AddMenuItemForm() {
       isAvailable,
       quantityOptions,
     });
-    // Add your submission logic here (e.g., API call)
   };
 
   return (
     <ScrollView className="flex-1 bg-orange-50">
-      {/* Header */}
       <View className="bg-orange-500 p-4 rounded-b-2xl shadow-md">
         <Text className="text-2xl font-bold text-white">Add Menu Item</Text>
       </View>
 
-      {/* Form Container */}
       <View className="p-4">
         <View className="bg-white rounded-2xl shadow-md p-4">
-          {/* Item Name */}
           <Text className="text-orange-700 font-semibold mb-1">Item Name</Text>
           <TextInput
             className="border border-orange-200 rounded-lg p-3 bg-orange-50 text-gray-800"
@@ -70,7 +114,6 @@ export default function AddMenuItemForm() {
             onChangeText={setItemName}
           />
 
-          {/* Price & Prep Time */}
           <View className="flex-row justify-between mt-4">
             <View className="flex-1 mr-2">
               <Text className="text-orange-700 font-semibold mb-1">Price ($)</Text>
@@ -96,7 +139,6 @@ export default function AddMenuItemForm() {
             </View>
           </View>
 
-          {/* Category */}
           <Text className="text-orange-700 font-semibold mt-4 mb-1">Category</Text>
           <TextInput
             className="border border-orange-200 rounded-lg p-3 bg-orange-50 text-gray-800"
@@ -106,7 +148,6 @@ export default function AddMenuItemForm() {
             onChangeText={setCategory}
           />
 
-          {/* Description */}
           <Text className="text-orange-700 font-semibold mt-4 mb-1">Description</Text>
           <TextInput
             className="border border-orange-200 rounded-lg p-3 bg-orange-50 text-gray-800 h-24"
@@ -118,7 +159,6 @@ export default function AddMenuItemForm() {
             onChangeText={setDescription}
           />
 
-          {/* Image Upload */}
           <Text className="text-orange-700 font-semibold mt-4 mb-1">Item Image</Text>
           <View className="border border-orange-200 rounded-lg p-4 bg-orange-50">
             {imageUri ? (
@@ -137,7 +177,6 @@ export default function AddMenuItemForm() {
             </TouchableOpacity>
           </View>
 
-          {/* Availability Toggle */}
           <View className="flex-row items-center justify-between mt-4">
             <Text className="text-orange-700 font-semibold text-lg">Available</Text>
             <Switch
@@ -148,7 +187,6 @@ export default function AddMenuItemForm() {
             />
           </View>
 
-          {/* Quantity Options */}
           <Text className="text-orange-700 font-semibold mt-4 mb-1">Quantity Options</Text>
           {quantityOptions.map((option, index) => (
             <View key={index} className="flex-row justify-between mt-2">
@@ -181,7 +219,6 @@ export default function AddMenuItemForm() {
             <Text className="text-orange-600 text-sm font-semibold">+ Add Another Option</Text>
           </TouchableOpacity>
 
-          {/* Submit Button */}
           <TouchableOpacity
             onPress={handleSubmit}
             className="bg-orange-500 p-4 mt-6 rounded-lg shadow-md"
@@ -190,7 +227,6 @@ export default function AddMenuItemForm() {
           </TouchableOpacity>
         </View>
 
-        {/* Preview Card (Moved Outside Form) */}
         <View className="bg-white rounded-2xl mt-6 shadow-md overflow-hidden">
           <Image
             source={{
