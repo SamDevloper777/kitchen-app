@@ -9,11 +9,15 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { loginOwner } from "@/redux/services/authService";
+import { useDispatch } from "react-redux";
+import { login } from "@/redux/slices/authSlice";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const dispatch = useDispatch();
 
   return (
     <View className="flex-1 items-center justify-center bg-gray-100 px-6">
@@ -50,12 +54,15 @@ export default function LoginScreen() {
         <Text className="text-right text-blue-500">Recovery Password</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity className="w-full bg-orange-500 p-4 rounded-xl mt-6">
+      {/*
+        We will call the service function loginOwner here and pass the email and password to it and then we will dispatch the login action to the redux store with the response data
+      */}
+      <TouchableOpacity className="w-full bg-orange-500 p-4 rounded-xl mt-6" onPress={() => loginOwner(email, password, dispatch)}>
         <Text className="text-white text-center font-bold">Sign in</Text>
       </TouchableOpacity>
 
       <Text className="text-gray-500 my-4">or continue with</Text>
-{/* 
+      {/* 
       <View className="flex-row space-x-4">
         <TouchableOpacity className="p-3 bg-white rounded-full border border-gray-300">
           <Image
@@ -80,9 +87,30 @@ export default function LoginScreen() {
       <Pressable onPress={() => router.replace("/(auth)/register")}>
         <Text className="mt-6">Not a member? <Text className="text-blue-500">Register now</Text></Text>
       </Pressable>
-      <Pressable onPress={() => router.replace("/(tabs)")}>
+      <Pressable onPress={() => {
+        const mock = {
+          message: "Login successful",
+          access_token: "mocked_access_token",
+          refresh_token: "mocked_refresh_token",
+          user: {
+            id: 6,
+            email: "john@gmail.com",
+            username: "Dev User",
+            role: "owner"
+          }
+        }
+        // Call the auth Reducer to set login state
+        dispatch(login(
+          {
+            access_token: mock.access_token,
+            refresh_token: mock.refresh_token,
+            user: mock.user
+          }
+        ))
+        router.replace("/(tabs)")
+      }}>
         <Text className="mt-6">skip</Text>
       </Pressable>
-    </View>
+    </View >
   );
 }

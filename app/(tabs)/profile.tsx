@@ -1,8 +1,12 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import { ArrowDown, ArrowUp } from "lucide-react-native"; // Icons
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 const profile = () => {
+  const { user } = useSelector((state: RootState) => state.auth);
+
   return (
     <ScrollView className="bg-gray-100 flex-1 p-4">
       
@@ -12,7 +16,7 @@ const profile = () => {
           source={{ uri: "https://via.placeholder.com/100" }} // Demo Profile Image
           className="w-24 h-24 rounded-full border-2 border-white"
         />
-        <Text className="text-2xl font-bold mt-2">logo</Text>
+        <Text className="text-2xl font-bold mt-2">{user?.username}</Text>
         <Text className="text-gray-600">Italian Cuisine Specialist</Text>
         <View className="bg-green-100 px-3 py-1 rounded-full mt-1">
           <Text className="text-green-600 text-sm font-semibold">Online</Text>
